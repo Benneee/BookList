@@ -61,6 +61,15 @@ UI.prototype.showAlert = function(message, className) {
   }, 3000);
 };
 
+// Delet a book
+UI.prototype.deleteBook = target => {
+  // Our target in this place is the link tag
+  // Deleting the link tag won't take away our book, we want to traverse through the DOM
+  // First up is the parent element, the <td> tags, data cell
+  // Next up is the <tr> tags, holding our book object, here, we can now remove from the DOM tree
+  target.className === 'delete' ? target.parentElement.parentElement.remove() : null;
+};
+
 // The method to clear form fields after submission
 UI.prototype.clearFields = function() {
   document.getElementById('title').value = '';
@@ -71,9 +80,10 @@ UI.prototype.clearFields = function() {
 // Event Listeners
 const form = document.getElementById('book-form');
 
-form.addEventListener('submit', submittedForm);
+// Listener To Add Book
+form.addEventListener('submit', addBook);
 
-function submittedForm(e) {
+function addBook(e) {
   // Get form values
 
   const title = document.getElementById('title').value,
@@ -90,6 +100,29 @@ function submittedForm(e) {
   title === '' || author === '' || isbn === ''
     ? ui.showAlert('Please fill in all fields', 'error')
     : (ui.addBookToTable(book), ui.showAlert('Book added successfully', 'success'), ui.clearFields());
+
+  e.preventDefault();
+}
+
+// Listener To Delete Book
+const bookList = document.getElementById('book-list');
+// We need to use a parent here, the parent holds all the books added to the list
+
+bookList.addEventListener('click', deleteBook);
+
+function deleteBook(e) {
+  // This log shows that when we click anywhere on the new book added, we can delete it
+  // However, we don't want to do that, we need to target the link element and that should handle deletion
+  // We do this with a prototype method
+  // console.log('delete book');
+
+  const ui = new UI();
+
+  // Delete book using the prototype created above
+  ui.deleteBook(e.target);
+
+  // Show alert after deleting book
+  ui.showAlert('Book deleted successfully', 'success');
 
   e.preventDefault();
 }

@@ -61,7 +61,7 @@ UI.prototype.showAlert = function(message, className) {
   }, 3000);
 };
 
-// Delet a book
+// Delete a book
 UI.prototype.deleteBook = target => {
   // Our target in this place is the link tag
   // Deleting the link tag won't take away our book, we want to traverse through the DOM
@@ -77,7 +77,59 @@ UI.prototype.clearFields = function() {
   document.getElementById('isbn').value = '';
 };
 
+function Store() {}
+
+Store.prototype.getBooks = () => {
+  // Instantiate the books object
+  let books;
+
+  // check if there is content titled books in LS, if there aren't, set an empty array, if there is content, bring back every content with the key 'books'
+  books = localStorage.getItem('books') === null ? [] : JSON.parse(localStorage.getItem('books'));
+  return books;
+};
+
+Store.prototype.displayBooks = () => {
+  const store = new Store();
+  const books = store.getBooks();
+
+  books.forEach(book => {
+    const ui = new UI();
+
+    ui.addBookToTable(book);
+  });
+};
+
+Store.prototype.addBook = book => {
+  // First thing, get books from the LS
+  const store = new Store();
+  const books = store.getBooks();
+
+  // Next, we want to push new content to LS
+  books.push(book);
+
+  // Next, we set the list of books in the LS
+  localStorage.setItem('books', JSON.stringify(books));
+};
+
+Store.prototype.removeBook = isbn => {
+  const store = new Store();
+  const books = store.getBooks();
+
+  // We don't have an id for the books but we have an isbn which we can use to remove books from LS
+  // console.log(isbn); Yay, it logged in the console
+  // Next, we loop through and get the particular isbn in question and pop it off the LS
+  books.forEach((book, index) => {
+    book.isbn === isbn ? books.splice(index, 1) : null;
+  });
+  localStorage.setItem('books', JSON.stringify(books));
+};
+
 // Event Listeners
+
+// Event listener to pop out things in the LS
+const store = new Store();
+document.addEventListener('DOMContentLoaded', store.displayBooks);
+
 const form = document.getElementById('book-form');
 
 // Listener To Add Book
@@ -95,11 +147,12 @@ function addBook(e) {
 
   // Instantiate a UI object
   const ui = new UI();
+  const store = new Store();
 
   // Validate form entries/submission
   title === '' || author === '' || isbn === ''
     ? ui.showAlert('Please fill in all fields', 'error')
-    : (ui.addBookToTable(book), ui.showAlert('Book added successfully', 'success'), ui.clearFields());
+    : (ui.addBookToTable(book), store.addBook(book), ui.showAlert('Book added successfully', 'success'), ui.clearFields());
 
   e.preventDefault();
 }
@@ -117,9 +170,12 @@ function deleteBook(e) {
   // console.log('delete book');
 
   const ui = new UI();
+  const store = new Store();
 
   // Delete book using the prototype created above
   ui.deleteBook(e.target);
+  const isbn = e.target.parentElement.previousElementSibling.textContent;
+  store.removeBook(isbn);
 
   // Show alert after deleting book
   ui.showAlert('Book deleted successfully', 'success');
